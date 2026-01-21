@@ -1,23 +1,13 @@
 spring:
-  application:
-    name: Smart Invoice Engine
   datasource:
-    url: jdbc:h2:file:./data/smart_invoice;AUTO_SERVER=TRUE
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/securecapita?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: root
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    show-sql: true             # نقلت هذا السطر ليكون تحت jpa مباشرة
     hibernate:
       ddl-auto: update
-    properties:                # قسم جديد للإعدادات الإضافية
+    show-sql: true
+    properties:
       hibernate:
-        format_sql: true       # 1. يجعلك ترى جمل SQL بشكل مرتب ومقروء
-        globally_quoted_identifiers: true # 2. مهم جداً لـ H2
-        sql: # 2. قسم جديد
-          init:
-            mode: never # تمت الإضافة: يمنع تشغيل ملفات schema.sql أو data.sql تلقائياً
-  h2:
-    console:
-      enabled: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
