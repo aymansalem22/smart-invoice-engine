@@ -1,6 +1,6 @@
 /*
  * --- General Rules ---
- * Use underscore_names instead of CamelCase
+ * Use underscore_names instead of camelCase
  * Table names should be plural
  * Spell out id fields (item_id instead of id)
  * Don't use ambiguous column names
