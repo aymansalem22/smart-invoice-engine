@@ -8,18 +8,22 @@ import com.paltecno.fintech.invoicing.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
+import java.util.UUID;
 
 import static com.paltecno.fintech.invoicing.enumeration.RoleType.ROLE_USER;
+import static com.paltecno.fintech.invoicing.enumeration.VerificationType.ACCOUNT;
 import static com.paltecno.fintech.invoicing.query.UserQuery.*;
 import static java.util.Objects.requireNonNull;
 
@@ -29,14 +33,17 @@ import static java.util.Objects.requireNonNull;
 public class UserRepositoryImpl implements UserRepository<User> {
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
+    //#5
+    private final BCryptPasswordEncoder encoder;
+
     @Override
     public User create(User user) {
         // check the email is unique
-        if(getEmailCount(user.getEmail().trim().toLowerCase()) > 0) throw new ApiException("Email already in use. Please use a different email and try again.");
+        if (getEmailCount(user.getEmail().trim().toLowerCase()) > 0)
+            throw new ApiException("Email already in use. Please use a different email and try again.");
 
         //if not unique then save new user
-        try
-        {
+        try {
             KeyHolder holder = new GeneratedKeyHolder();
             SqlParameterSource parameters = getSqlParameterSource(user);
             jdbc.update(INSERT_USER_QUERY, parameters, holder);
@@ -46,23 +53,26 @@ public class UserRepositoryImpl implements UserRepository<User> {
             roleRepository.addRoleToUser(user.getId(), ROLE_USER.name());
 
             //send verification URL
+            String verificationUrl = getVerificationUrl(UUID.randomUUID().toString(), ACCOUNT.getType());
+
             // Save URL in verification table
+
+            jdbc.update(INSERT_ACCOUNT_VERIFICATION_URL_QUERY, Map.of("userId", user.getId(), "url", verificationUrl));
+
             //Send email to user with verification URL
+            //will do later
+            //emailService.sendVerificationUrl(user.getFirstName(),user.getEmail(), verificationUrl, ACCOUNT);
+            user.setEnabled(false);
+            user.setNotLoced(true);
             //Return the newly created user
+            return user;
             //if any errors, throw exception with proper message
         }
-        catch(EmptyResultDataAccessException exception) {
-
-        }
-        catch(Exception exception){
-
+        catch (Exception exception) {
+            throw new ApiException("An error occurred. Please try again.");
         }
 
-
-        return null;
     }
-
-
 
 
     @Override
@@ -86,9 +96,21 @@ public class UserRepositoryImpl implements UserRepository<User> {
     }
 
     private Integer getEmailCount(String email) {
-        return jdbc.queryForObject(COUNT_USER_EMAIL_QUERY, Map.of("email",email), Integer.class);
+        return jdbc.queryForObject(COUNT_USER_EMAIL_QUERY, Map.of("email", email), Integer.class);
     }
 
     private SqlParameterSource getSqlParameterSource(User user) {
+        //#5
+        return new MapSqlParameterSource()
+                .addValue("firstName", user.getFirstName())
+                .addValue("lastName", user.getLastName())
+                .addValue("email", user.getEmail())
+                .addValue("password", encoder.encode(user.getPassword()));
+    }
+
+    private String getVerificationUrl(String key, String type) {
+        //#5
+        return ServletUriComponentsBuilder.fromCurrentContextPath().path("user/verify/" + type + "/" + key).toUriString();
+
     }
 }
