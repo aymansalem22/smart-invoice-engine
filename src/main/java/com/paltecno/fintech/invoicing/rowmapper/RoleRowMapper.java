@@ -10,7 +10,7 @@ public class RoleRowMapper implements RowMapper<Role> {
     @Override
     public Role mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return Role.builder()
-                .id(resultSet.getLong("id"))
+                .id(resultSet.getLong("role_id"))
                 .name(resultSet.getString("name"))
                 .permission(resultSet.getString("permission"))
                 .build();

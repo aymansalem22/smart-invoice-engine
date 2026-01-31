@@ -11,7 +11,7 @@ spring:
   jpa:
     # Set ddl-auto to 'none' to avoid conflicts with schema.sql
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
