@@ -6,6 +6,8 @@ import com.paltecno.fintech.invoicing.dto.UserDTO;
 import com.paltecno.fintech.invoicing.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,11 +26,19 @@ import static org.springframework.http.HttpStatus.CREATED;
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
 public class UserResource {
-    private final UserService userServic;
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+
+    @PostMapping("/login")
+    public ResponseEntity<HttpResponse> login(String email, String password){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        return null;
+    }
+
 
     @PostMapping("/register")
     public ResponseEntity<HttpResponse> saveUser(@RequestBody @Valid User user){
-     UserDTO userDTO = userServic.createUser(user);
+     UserDTO userDTO = userService.createUser(user);
      return ResponseEntity.created(getUri()).body(
              HttpResponse.builder()
                      .timeStamp(now().toString())
