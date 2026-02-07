@@ -3,8 +3,10 @@ package com.paltecno.fintech.invoicing.resource;
 import com.paltecno.fintech.invoicing.domain.HttpResponse;
 import com.paltecno.fintech.invoicing.domain.User;
 import com.paltecno.fintech.invoicing.dto.UserDTO;
+import com.paltecno.fintech.invoicing.form.LoginForm;
 import com.paltecno.fintech.invoicing.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,20 +21,30 @@ import java.net.URI;
 
 import static java.time.LocalDateTime.now;
 import static java.util.Map.of;
-import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.*;
 
 
 @RestController
 @RequestMapping(path = "/user")
 @RequiredArgsConstructor
+@Slf4j
 public class UserResource {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/login")
-    public ResponseEntity<HttpResponse> login(String email, String password){
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        return null;
+    public ResponseEntity<HttpResponse> login(@RequestBody @Valid LoginForm loginForm){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword()));
+        log.info("Login successful for user: {}", loginForm.getEmail());
+        UserDTO userDTO = userService.getUserByEmail(loginForm.getEmail());
+        return ResponseEntity.ok().body(
+                HttpResponse.builder()
+                        .timeStamp(now().toString())
+                        .data(of("user",userDTO))
+                        .message("Login Success")
+                        .status(OK)
+                        .statusCode(OK.value())
+                        .build());
     }
 
 

@@ -24,7 +24,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 @EnableMethodSecurity//default (prePostEnabled = true)
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_URLS = {};
+    private static final String[] PUBLIC_URLS = {"/user/login/**"};
     private final BCryptPasswordEncoder encoder;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
