@@ -1,6 +1,7 @@
 package com.paltecno.fintech.invoicing.repository;
 
 import com.paltecno.fintech.invoicing.domain.User;
+import com.paltecno.fintech.invoicing.dto.UserDTO;
 
 import java.util.Collection;
 
@@ -12,6 +13,8 @@ public interface UserRepository <T extends User>{
     T update (T data);
     Boolean delete(Long id);
     User getUserByEmail(String email);
+
+    void sendVerificationCode(UserDTO user);
 
 
     /* More complex Operations */

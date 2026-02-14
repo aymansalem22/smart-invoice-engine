@@ -7,4 +7,6 @@ public interface UserService {
     //concept data transfer pattern for that create package dto
     UserDTO createUser(User user);
     UserDTO getUserByEmail(String email);
+
+    void sendVerificationCode(UserDTO user);
 }

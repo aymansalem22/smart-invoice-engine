@@ -3,6 +3,7 @@ package com.paltecno.fintech.invoicing.repository.implementation;
 import com.paltecno.fintech.invoicing.domain.Role;
 import com.paltecno.fintech.invoicing.domain.User;
 import com.paltecno.fintech.invoicing.domain.UserPrincipal;
+import com.paltecno.fintech.invoicing.dto.UserDTO;
 import com.paltecno.fintech.invoicing.exception.ApiException;
 import com.paltecno.fintech.invoicing.repository.RoleRepository;
 import com.paltecno.fintech.invoicing.repository.UserRepository;
@@ -22,20 +23,28 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+
+import static com.paltecno.fintech.invoicing.utils.SmsUtils.sendSMS;
 import static java.util.Map.of;
+
 import java.util.Collection;
+import java.util.Date;
 import java.util.UUID;
 
 import static com.paltecno.fintech.invoicing.enumeration.RoleType.ROLE_USER;
 import static com.paltecno.fintech.invoicing.enumeration.VerificationType.ACCOUNT;
 import static com.paltecno.fintech.invoicing.query.UserQuery.*;
-
+import static org.apache.commons.lang3.time.DateFormatUtils.format;
 import static java.util.Objects.requireNonNull;
+import static org.apache.commons.lang3.time.DateUtils.addDays;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 @Repository
 @RequiredArgsConstructor
 @Slf4j
 public class UserRepositoryImpl implements UserRepository<User>, UserDetailsService {
+    private static final String DATE_FORMAT = "yyyy-MM-dd hh:mm:ss";
     private final NamedParameterJdbcTemplate jdbc;
     private final RoleRepository<Role> roleRepository;
     //#5
@@ -129,6 +138,24 @@ public class UserRepositoryImpl implements UserRepository<User>, UserDetailsServ
         }
         catch (Exception exception){
             log.error(exception.getMessage());
+            throw new ApiException("An error occurred. Please try again.");
+        }
+    }
+
+    @Override
+    public void sendVerificationCode(UserDTO user) {
+        String expirationDate = format(addDays(new Date(),1), DATE_FORMAT);
+        String verificationCode = randomAlphabetic(8).toUpperCase();
+        try
+        {
+            jdbc.update(DELETE_VERIFICATION_CODE_BY_USER_ID, of("userId",user.getId()));
+            jdbc.update(INSERT_VERIFICATION_CODE_QUERY, of("userId",user.getId(), "code",verificationCode, "expirationDate", expirationDate));
+            sendSMS(user.getPhone(), "From:  Smart Invoice Engine \nVerification Code\n" + verificationCode);
+        }
+
+        catch (Exception exception)
+        {
+log.error(exception.getMessage());
             throw new ApiException("An error occurred. Please try again.");
         }
     }

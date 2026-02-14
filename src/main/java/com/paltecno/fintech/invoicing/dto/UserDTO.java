@@ -1,10 +1,14 @@
 package com.paltecno.fintech.invoicing.dto;
 
-import lombok.Data;
+
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserDTO {
     private Long id;
     private String firstName;
